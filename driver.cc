@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
     uint64_t count(COUNT);
     int c;
     HashTable *ht;
+    stringstream ss_mem;
 
     while ((c = getopt (argc, argv, "d:c:b:n:t:")) != -1) { 
         switch (c) 
@@ -81,8 +82,11 @@ int main(int argc, char **argv) {
         std::cout<<"Hashtable type not supported"<<std::endl;
         usage(argv);
     }
-    std::cout<<"Going to insert "<<count<<" keys into"<<type<<std::endl;
+    std::cout<<"Going to insert "<<count<<" keys into "<<type<<std::endl;
     benchmark(ht, count);
+    std::cout<<"Memory consumed (KB):"<<std::endl;
+    ss_mem<<"ps -osize= --pid "<<getpid();
+    system(ss_mem.str().c_str());
     delete ht;
 }
 
