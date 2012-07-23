@@ -12,8 +12,9 @@
 void benchmark(HashTable *h, uint64_t c) {
     Timing t_lookup("Lookup"), t_insert("Insert"), t_total("Total");
     bool found;
-    std::stringstream ss;
+
     for(; c; c--) {
+        std::stringstream ss;
         ss<<"empire_GIFT_REQUEST_"<<std::setw(11) << std::setfill('0')<<c;
         t_lookup.start();
         found = h->lookup(ss.str());
