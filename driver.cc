@@ -11,12 +11,15 @@
 #define KEY_PREFIX "empire_GIFT_REQUEST_"
 
 void benchmark(HashTable *h, uint64_t c) {
-    Timing t_lookup("Lookup"), t_insert("Insert"), t_total("Total");
+    Timing t_lookup("Lookup"), t_insert("Insert"),
+           t_formkey("Framing keys"), t_total("Total");
     bool found;
 
     for(; c; c--) {
+        t_formkey.start();
         std::stringstream ss;
         ss<<KEY_PREFIX<<std::setw(11) << std::setfill('0')<<c;
+        t_formkey.stop();
         t_lookup.start();
         found = h->lookup(ss.str());
         t_lookup.stop();
@@ -29,7 +32,7 @@ void benchmark(HashTable *h, uint64_t c) {
    }
 }
 
-size_t getUsedMemory() {
+double getUsedMemory() {
     size_t memsize;
     FILE *f = fopen("/proc/self/statm", "r");
     if (!f) {
@@ -39,7 +42,7 @@ size_t getUsedMemory() {
     fscanf(f, "%ld", &memsize);
     fclose(f);
 
-    return memsize;
+    return memsize/1024.0;
 }
 
 void usage(char **argv) {
@@ -99,7 +102,7 @@ int main(int argc, char **argv) {
     }
     std::cout<<"Going to insert "<<count<<" keys into "<<type<<std::endl;
     benchmark(ht, count);
-    std::cout<<"Memory consumed (KB):"<<getUsedMemory()<<std::endl;
+    std::cout<<"Memory consumed: "<<getUsedMemory()<<"M"<<std::endl;
     delete ht;
 }
 
