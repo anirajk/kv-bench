@@ -35,8 +35,6 @@ void benchmark(HashTable *h, uint64_t c, std::string klist) {
                 break;
             }
         }
-        std::cout<<"key-"<<s<<std::endl;
-
         t_formkey.stop();
         t_lookup.start();
         found = h->lookup(s);
