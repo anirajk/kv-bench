@@ -8,6 +8,7 @@
 #define BUCKET_SIZE 100000000
 #define COUNT 100
 #define CACHE_SIZE 100
+#define KEY_PREFIX "empire_GIFT_REQUEST_"
 
 void benchmark(HashTable *h, uint64_t c) {
     Timing t_lookup("Lookup"), t_insert("Insert"), t_total("Total");
@@ -15,7 +16,7 @@ void benchmark(HashTable *h, uint64_t c) {
 
     for(; c; c--) {
         std::stringstream ss;
-        ss<<"empire_GIFT_REQUEST_"<<std::setw(11) << std::setfill('0')<<c;
+        ss<<KEY_PREFIX<<std::setw(11) << std::setfill('0')<<c;
         t_lookup.start();
         found = h->lookup(ss.str());
         t_lookup.stop();
@@ -26,6 +27,19 @@ void benchmark(HashTable *h, uint64_t c) {
             t_insert.stop();
         }
    }
+}
+
+size_t getUsedMemory() {
+    size_t memsize;
+    FILE *f = fopen("/proc/self/statm", "r");
+    if (!f) {
+        perror("");
+        exit(1);
+    }
+    fscanf(f, "%ld", &memsize);
+    fclose(f);
+
+    return memsize;
 }
 
 void usage(char **argv) {
@@ -85,9 +99,7 @@ int main(int argc, char **argv) {
     }
     std::cout<<"Going to insert "<<count<<" keys into "<<type<<std::endl;
     benchmark(ht, count);
-    std::cout<<"Memory consumed (KB):"<<std::endl;
-    ss_mem<<"ps -osize= --pid "<<getpid();
-    system(ss_mem.str().c_str());
+    std::cout<<"Memory consumed (KB):"<<getUsedMemory()<<std::endl;
     delete ht;
 }
 
