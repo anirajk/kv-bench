@@ -10,26 +10,45 @@
 #define CACHE_SIZE 100
 #define KEY_PREFIX "empire_GIFT_REQUEST_"
 
-void benchmark(HashTable *h, uint64_t c) {
+void benchmark(HashTable *h, uint64_t c, std::string klist) {
     Timing t_lookup("Lookup"), t_insert("Insert"),
            t_formkey("Framing keys"), t_total("Total");
-    bool found;
+    bool found, key_from_file(false), eof(false);
+    std::ifstream file;
+    std::string s;
 
-    for(; c; c--) {
-        std::stringstream ss;
+    if (klist != "none") {
+        file.open(klist.c_str());
+        key_from_file = true;
+    }
+
+    for(; key_from_file?!eof:c; c--) {
         t_formkey.start();
-        ss<<KEY_PREFIX<<std::setw(11) << std::setfill('0')<<c;
+        if (!key_from_file) {
+            std::stringstream ss;
+
+            ss<<KEY_PREFIX<<std::setw(11) << std::setfill('0')<<c;
+            s = ss.str();
+        } else {
+            if (!std::getline(file, s)) {
+                eof = true;
+                break;
+            }
+        }
+        std::cout<<"key-"<<s<<std::endl;
+
         t_formkey.stop();
         t_lookup.start();
-        found = h->lookup(ss.str());
+        found = h->lookup(s);
         t_lookup.stop();
 
         if (!found) {
             t_insert.start();
-            h->insert(ss.str());
+            h->insert(s);
             t_insert.stop();
         }
-   }
+    }
+    file.close();
 }
 
 double getUsedMemory() {
@@ -51,24 +70,27 @@ double getUsedMemory() {
 }
 
 void usage(char **argv) {
-    std::cout<<"Usage: "<<argv[0]<<" -d dbfile -c cache_size (MB) -b buckets -n keycount -t sqlite|kyotodb|sparsehash"<<std::endl;
+    std::cout<<"Usage: "<<argv[0]<<" -k keylistfile -d dbfile -c cache_size (MB) -b buckets -n keycount -t sqlite|kyotodb|sparsehash"<<std::endl;
     exit(1);
 }
 
 int main(int argc, char **argv) {
 
-    std::string dbfile("none"), type;
+    std::string dbfile("none"), keyfile("none"), type;
     size_t cache_size(CACHE_SIZE), bucket_size(BUCKET_SIZE);
     uint64_t count(COUNT);
     int c;
     HashTable *ht;
     stringstream ss_mem;
 
-    while ((c = getopt (argc, argv, "d:c:b:n:t:")) != -1) { 
+    while ((c = getopt (argc, argv, "k:d:c:b:n:t:")) != -1) { 
         switch (c) 
         {   
             case 'd':
                 dbfile = optarg;
+                break;
+            case 'k':
+                keyfile = optarg;
                 break;
             case 'c':
                 cache_size = atoi(optarg);
@@ -106,7 +128,7 @@ int main(int argc, char **argv) {
         usage(argv);
     }
     std::cout<<"Going to insert "<<count<<" keys into "<<type<<std::endl;
-    benchmark(ht, count);
+    benchmark(ht, count, keyfile);
     std::cout<<"Memory consumed: "<<getUsedMemory()<<"M"<<std::endl;
     delete ht;
 }
