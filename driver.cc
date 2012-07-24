@@ -16,8 +16,8 @@ void benchmark(HashTable *h, uint64_t c) {
     bool found;
 
     for(; c; c--) {
-        t_formkey.start();
         std::stringstream ss;
+        t_formkey.start();
         ss<<KEY_PREFIX<<std::setw(11) << std::setfill('0')<<c;
         t_formkey.stop();
         t_lookup.start();
@@ -34,13 +34,18 @@ void benchmark(HashTable *h, uint64_t c) {
 
 double getUsedMemory() {
     size_t memsize;
-    FILE *f = fopen("/proc/self/statm", "r");
-    if (!f) {
-        perror("");
-        exit(1);
+    std::ifstream file;
+    std::string line;
+    int i;
+    
+    file.open("/proc/self/status");
+    for (i=0;i<12;i++) {
+        std::getline(file, line);
     }
-    fscanf(f, "%ld", &memsize);
-    fclose(f);
+
+    std::stringstream ss(line);
+    ss>>line>>memsize;
+    file.close();
 
     return memsize/1024.0;
 }
